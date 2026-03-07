@@ -7,12 +7,42 @@
 
 body {
     font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(270deg, #0f0024, #2a004d, #ff4fd8, #1a0033);
+    background-size: 600% 600%;
+    animation: galaxyMove 20s ease infinite;
     min-height: 100vh;
     color: #333;
     line-height: 1.6;
+    position: relative;
+    overflow-x: hidden;
+}
+@keyframes galaxyMove {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+}
+body::before {
+    content: "";
+    position: fixed;
+    top: -200%;
+    left: -200%;
+    width: 400%;
+    height: 400%;
+    background-image:
+        radial-gradient(2px 2px at 20% 30%, white, transparent),
+        radial-gradient(1px 1px at 40% 70%, white, transparent),
+        radial-gradient(2px 2px at 60% 40%, white, transparent),
+        radial-gradient(1px 1px at 80% 10%, white, transparent),
+        radial-gradient(2px 2px at 10% 80%, white, transparent),
+        radial-gradient(1px 1px at 70% 90%, white, transparent);
+    animation: starsMove 120s linear infinite;
+    opacity: 0.6;
 }
 
+@keyframes starsMove {
+    from { transform: translateY(0); }
+    to { transform: translateY(1000px); }
+}
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -1190,3 +1220,4 @@ img {
 .stat-number {
     animation: popIn 0.5s ease;
 }
+
