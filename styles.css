@@ -8,74 +8,10 @@
 
 body {
     font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     color: #333;
     line-height: 1.6;
-    overflow-x: hidden;
-
-    /* Galaxy base */
-    background:
-        background:
-    radial-gradient(circle at 20% 30%, rgba(255,100,200,0.45), transparent 45%), 
-    radial-gradient(circle at 70% 60%, rgba(140,90,255,0.45), transparent 45%), 
-    radial-gradient(circle at 50% 80%, rgba(80,160,255,0.45), transparent 50%), 
-    radial-gradient(circle at 85% 20%, rgba(200,120,255,0.35), transparent 40%), 
-    linear-gradient(180deg, #030014 0%, #000000 100%);
-}
-
-/* Nebula movement */
-@keyframes nebulaMove {
-    0% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    100% {
-        background-position: 0% 50%;
-    }
-}
-
-/* Stars layer */
-body::before {
-    content: "";
-    position: fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-
-    background-image:
-        radial-gradient(white 1px, transparent 1px),
-        radial-gradient(white 2px, transparent 2px),
-        radial-gradient(white 1px, transparent 1px);
-
-    background-size: 80px 80px, 140px 140px, 200px 200px;
-    opacity:0.8;
-    z-index:-1;
-}
-
-/* Twinkling stars */
-@keyframes starsTwinkle {
-    0% {opacity:0.5;}
-    50% {opacity:1;}
-    100% {opacity:0.5;}
-}
-
-body::after{
-    content:"";
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-
-    background-image: radial-gradient(white 2px, transparent 2px);
-    background-size:180px 180px;
-
-    animation: starsTwinkle 6s infinite;
-    opacity:0.7;
-    z-index:-1;
 }
 
 .container {
@@ -100,17 +36,17 @@ body::after{
 
 
 .header-logo {
-    width: 60px;        
-    height: 60px;       
-    object-fit: contain; 
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1)); 
+    width: 60px;         /* Ukuran diperbesar dari sebelumnya */
+    height: 60px;        /* Samakan width & height agar tetap square */
+    object-fit: contain; /* Memastikan gambar logo tidak terdistorsi */
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1)); /* Tambahan shadow halus agar logo lebih 'pop' */
 }
 
 .header-content h1 {
     display: flex;
-    align-items: center; 
-    gap: 15px;           
-    font-size: 2.5rem;   
+    align-items: center; /* Menjaga logo & teks sejajar vertikal */
+    gap: 15px;           /* Memberi jarak yang pas antara logo & teks */
+    font-size: 2.5rem;   /* Menyesuaikan ukuran teks h1 */
 }
 
 .subtitle {
@@ -1255,7 +1191,3 @@ img {
 .stat-number {
     animation: popIn 0.5s ease;
 }
-
-
-
-
