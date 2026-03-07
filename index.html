@@ -1,27 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Habitify task</title>
+    <title>Habitify Task Tracker</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+    
 </head>
-
 <body>
     <div class="container">
         <header class="header">
             <div class="header-content">
-                <h1>
-                    <img src="logo.png" alt="Logo Habitify" class="header-logo">
-                    Habitify task
-                </h1>
-                <p class="subtitle">Build better your habits</p>
+                <h1><i class="fas fa-chart-line"></i> Habitify task Tracker</h1>
+                <p class="subtitle">Build Better Habits Every Day</p>
+        
+            
             </div>
             <div class="header-stats">
                 <div class="stat-card">
@@ -83,7 +79,7 @@
                     <button class="action-btn quaternary" id="importBtn">
                         <i class="fas fa-upload"></i> Import Data
                     </button>
-                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                   <input type="file" id="importFile" accept=".json,application/json" style="display: none;">
                 </div>
 
                 <div class="dashboard-card recent-activity">
@@ -98,7 +94,7 @@
                 </div>
             </div>
 
-
+  
             <div class="today-habits">
                 <h3><i class="fas fa-sun"></i> Today's Habits</h3>
                 <div class="habits-grid" id="todayHabitsGrid">
@@ -125,7 +121,7 @@
                     <h3><i class="fas fa-chart-bar"></i> Monthly Progress</h3>
                     <canvas id="monthlyChart"></canvas>
                 </div>
-
+                
                 <div class="chart-card">
                     <h3><i class="fas fa-chart-pie"></i> Habit Distribution</h3>
                     <canvas id="habitDistributionChart"></canvas>
@@ -165,7 +161,7 @@
         <div class="tab-content" id="calendar">
             <div class="calendar-header">
                 <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
-                <h2 id="currentMonth">December 2025</h2>
+               <h2 id="currentMonth"></h2>
                 <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
             </div>
             <div class="calendar-grid" id="calendarGrid">
@@ -182,9 +178,9 @@
             <form id="habitForm">
                 <div class="form-group">
                     <label for="habitName">Habit Name *</label>
-                    <input type="text" id="habitName" required placeholder="e.g., Drink 8 glasses of water">
+                 <input type="text" id="habitName" name="habitName" required placeholder="e.g., Drink 8 glasses of water">
                 </div>
-
+                
                 <div class="form-group">
                     <label for="habitDescription">Description</label>
                     <textarea id="habitDescription" placeholder="Optional description..."></textarea>
@@ -253,5 +249,4 @@
 
     <script src="script.js"></script>
 </body>
-
 </html>
