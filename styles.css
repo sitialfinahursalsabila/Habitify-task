@@ -1,167 +1,161 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    transition: all 0.2s ease;
-}
-
-/* =========================
-   GALAXY + NEBULA BACKGROUND
-   ========================= */
-
 body {
     font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #ff4fd8 0%, #ff2ec4 100%);
     min-height: 100vh;
     color: #333;
     line-height: 1.6;
-    overflow-x: hidden;
-
-    /* Galaxy + Nebula layers */
-    background:
-        radial-gradient(circle at 20% 30%, rgba(255,100,200,0.45), transparent 45%), 
-        radial-gradient(circle at 70% 60%, rgba(140,90,255,0.45), transparent 45%), 
-        radial-gradient(circle at 50% 80%, rgba(80,160,255,0.45), transparent 50%), 
-        radial-gradient(circle at 85% 20%, rgba(200,120,255,0.35), transparent 40%), 
-        linear-gradient(180deg, #030014 0%, #000000 100%);
-
-    background-size: 200% 200%;
-    animation: nebulaMove 35s ease infinite;
 }
 
-/* Nebula movement */
-@keyframes nebulaMove {
-    0% {
-        background-position: 0% 40%;
-    }
-    50% {
-        background-position: 100% 60%;
-    }
-    100% {
-        background-position: 0% 40%;
-    }
+.stat-card {
+    background: linear-gradient(135deg, #ff4fd8, #ff2ec4);
 }
 
-/* =========================
-   STAR FIELD LAYER
-   ========================= */
-
-body::before {
-    content: "";
-    position: fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    pointer-events: none;
-
-    background-image:
-        radial-gradient(white 1px, transparent 1px),
-        radial-gradient(white 2px, transparent 2px),
-        radial-gradient(white 1px, transparent 1px);
-
-    background-size: 
-        80px 80px,
-        140px 140px,
-        200px 200px;
-
-    opacity:0.7;
-    z-index:-1;
+.nav-tab:hover {
+    background: rgba(255, 79, 216, 0.1);
+    color: #ff4fd8;
 }
 
-/* =========================
-   TWINKLING STARS
-   ========================= */
-
-@keyframes starsTwinkle {
-    0% {opacity:0.4;}
-    50% {opacity:1;}
-    100% {opacity:0.4;}
+.nav-tab.active {
+    background: linear-gradient(135deg, #ff4fd8, #ff2ec4);
 }
 
-body::after{
-    content:"";
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    pointer-events:none;
-
-    background-image: radial-gradient(white 2px, transparent 2px);
-    background-size:180px 180px;
-
-    animation: starsTwinkle 6s infinite;
-    opacity:0.6;
-    z-index:-1;
+.dashboard-card h3 i {
+    color: #ff4fd8;
 }
 
-/* =========================
-   AURORA LIGHT EFFECT
-   ========================= */
-
-body::marker{}
-
-body::selection{}
-
-body::backdrop{}
-
-body::part{}
-
-body::cue{}
-
-body::slotted{}
-
-body::file-selector-button{}
-
-body::placeholder{}
-
-body::first-letter{}
-
-body::first-line{}
-
-body::selection{}
-
-body::before,
-body::after{}
-
-body::after{}
-
-body::before{}
-
-body::backdrop{}
-
-body::selection{}
-
-body::marker{}
-
-body::cue{}
-
-body::placeholder{}
-
-body::file-selector-button{}
-
-body::part{}
-
-body::slotted{}
-
-body::after{
-    mix-blend-mode: screen;
+.progress-percentage {
+    color: #ff4fd8;
 }
 
-body::before{
-    mix-blend-mode: screen;
+.action-btn.primary {
+    background: linear-gradient(135deg, #ff4fd8, #ff2ec4);
 }
 
-/* Aurora gradient moving slowly */
-
-@keyframes auroraMove {
-    0% {transform: translateX(-10%) translateY(0);}
-    50% {transform: translateX(10%) translateY(-5%);}
-    100% {transform: translateX(-10%) translateY(0);}
+.action-btn.secondary {
+    background: linear-gradient(135deg, #ff6adf, #ff9be8);
 }
 
-body::after{
-    animation:
-        starsTwinkle 6s infinite,
-        auroraMove 25s ease-in-out infinite;
+.action-btn.tertiary {
+    background: linear-gradient(135deg, #ff4fd8, #ff6adf);
+}
+
+.action-btn.quaternary {
+    background: linear-gradient(135deg, #ff9be8, #ff4fd8);
+}
+
+.activity-icon.completed {
+    background: linear-gradient(135deg, #ff6adf, #ff9be8);
+}
+
+.activity-icon.missed {
+    background: linear-gradient(135deg, #ff4fd8, #ff2ec4);
+}
+
+.habit-card.completed {
+    background: linear-gradient(135deg, rgba(255,79,216,0.1), rgba(255,155,232,0.1));
+    border-left-color: #ff4fd8;
+}
+
+.habit-card.incomplete {
+    border-left-color: #ff2ec4;
+}
+
+.habit-status.completed {
+    background: #ff4fd8;
+    border-color: #ff4fd8;
+}
+
+.habit-progress-bar {
+    background: linear-gradient(135deg, #ff4fd8, #ff9be8);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #ff4fd8, #ff2ec4);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 6px 20px rgba(255,79,216,0.6);
+}
+
+.btn-edit {
+    background: #ff4fd8;
+}
+
+.btn-delete {
+    background: #ff2ec4;
+}
+
+.stat-item i {
+    color: #ff4fd8;
+}
+
+.calendar-header button {
+    background: #ff4fd8;
+}
+
+.calendar-header button:hover {
+    background: #ff2ec4;
+}
+
+.calendar-day.header {
+    color: #ff4fd8;
+}
+
+.calendar-day.today {
+    background: linear-gradient(135deg, #ff4fd8, #ff2ec4);
+}
+
+.calendar-day:hover:not(.header) {
+    background: rgba(255,79,216,0.1);
+}
+
+.calendar-progress-bar {
+    background: linear-gradient(135deg, #ff4fd8, #ff9be8);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #ff4fd8;
+    box-shadow: 0 0 0 3px rgba(255,79,216,0.1);
+}
+
+.days-selector input[type="checkbox"]:checked + span {
+    color: #ff4fd8;
+}
+
+.toast {
+    background: linear-gradient(135deg, #ff4fd8, #ff9be8);
+}
+
+.toast.error {
+    background: linear-gradient(135deg, #ff2ec4, #ff4fd8);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #ff4fd8, #ff2ec4);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #ff2ec4, #ff6adf);
+}
+
+.habit-card:hover .habit-status:not(.completed) {
+    border-color: #ff4fd8;
+    background: rgba(255,79,216,0.1);
+}
+
+.calendar-day.has-progress {
+    border: 2px solid rgba(255,79,216,0.3);
+}
+
+::selection {
+    background: #ff4fd8;
+    color: white;
+}
+
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover {
+    border-color: #ff4fd8;
 }
