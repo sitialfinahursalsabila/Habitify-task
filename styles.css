@@ -8,10 +8,82 @@
 
 body {
     font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     color: #333;
     line-height: 1.6;
+    overflow-x: hidden;
+
+    /* Smooth Aurora */
+    background: linear-gradient(
+        -45deg,
+        #0f2027,
+        #203a43,
+        #2c5364,
+        #6a11cb,
+        #2575fc,
+        #43cea2,
+        #185a9d
+    );
+    background-size: 600% 600%;
+    animation: auroraSmooth 25s ease infinite;
+}
+
+/* animasi aurora lebih smooth */
+@keyframes auroraSmooth {
+    0% {
+        background-position: 0% 50%;
+    }
+    25% {
+        background-position: 50% 100%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    75% {
+        background-position: 50% 0%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* bintang */
+body::before {
+    content: "";
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background-image:
+        radial-gradient(white 1px, transparent 1px),
+        radial-gradient(white 1px, transparent 1px),
+        radial-gradient(white 2px, transparent 2px);
+    background-size: 80px 80px, 160px 160px, 240px 240px;
+    background-position: 0 0, 40px 40px, 120px 120px;
+    opacity:0.6;
+    z-index:-1;
+}
+
+/* bintang berkedip */
+@keyframes twinkle {
+    0% {opacity:0.4;}
+    50% {opacity:1;}
+    100% {opacity:0.4;}
+}
+
+body::after {
+    content:"";
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background-image: radial-gradient(white 2px, transparent 2px);
+    background-size:160px 160px;
+    animation: twinkle 5s infinite;
+    opacity:0.7;
+    z-index:-1;
 }
 
 .container {
@@ -36,17 +108,17 @@ body {
 
 
 .header-logo {
-    width: 60px;         /* Ukuran diperbesar dari sebelumnya */
-    height: 60px;        /* Samakan width & height agar tetap square */
-    object-fit: contain; /* Memastikan gambar logo tidak terdistorsi */
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1)); /* Tambahan shadow halus agar logo lebih 'pop' */
+    width: 60px;        
+    height: 60px;       
+    object-fit: contain; 
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1)); 
 }
 
 .header-content h1 {
     display: flex;
-    align-items: center; /* Menjaga logo & teks sejajar vertikal */
-    gap: 15px;           /* Memberi jarak yang pas antara logo & teks */
-    font-size: 2.5rem;   /* Menyesuaikan ukuran teks h1 */
+    align-items: center; 
+    gap: 15px;           
+    font-size: 2.5rem;   
 }
 
 .subtitle {
@@ -1191,3 +1263,4 @@ img {
 .stat-number {
     animation: popIn 0.5s ease;
 }
+
