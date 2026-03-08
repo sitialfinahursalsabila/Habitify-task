@@ -871,29 +871,31 @@ class HabitTracker {
         return activities.slice(0, 10); // Limit to 10 most recent
     }
 
-    getWeeklyData() {
-        const data = [];
-        const today = new Date();
+   getWeeklyData() {
+    const data = [];
+    const today = new Date();
+    const day = today.getDay();
+    
+    // Jika hari ini Minggu (0), kita kurangi 6 hari untuk ke Senin lalu.
+    // Jika bukan Minggu, kita kurangi (day - 1).
+    const diff = today.getDate() - (day === 0 ? 6 : day - 1);
+    const monday = new Date(today.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < 7; i++) {
+        const checkDate = new Date(monday);
+        checkDate.setDate(monday.getDate() + i);
+        const dateStr = this.formatDate(checkDate);
         
-        // Get Monday of this week
-        const monday = new Date(today);
-        monday.setDate(today.getDate() - today.getDay() + 1);
+        const dayHabits = this.getHabitsForDate(checkDate);
+        const completedCount = dayHabits.filter(habit => 
+            this.completions[dateStr] && this.completions[dateStr][habit.id]
+        ).length;
         
-        for (let i = 0; i < 7; i++) {
-            const checkDate = new Date(monday);
-            checkDate.setDate(monday.getDate() + i);
-            const dateStr = this.formatDate(checkDate);
-            
-            const dayHabits = this.getHabitsForDate(checkDate);
-            const completedCount = dayHabits.filter(habit => 
-                this.completions[dateStr] && this.completions[dateStr][habit.id]
-            ).length;
-            
-            data.push(completedCount);
-        }
-        
-        return data;
+        data.push(completedCount);
     }
+    return data;
+}
 
     getMonthlyData() {
         const labels = [];
@@ -1200,6 +1202,7 @@ if (!localStorage.getItem('habits')) {
     localStorage.setItem('habits', JSON.stringify(sampleHabits));
     localStorage.setItem('completions', JSON.stringify(sampleCompletions));
 }
+
 
 
 
