@@ -1,5 +1,3 @@
-// Habit Tracker Pro - Main JavaScript File
-
 class HabitTracker {
     constructor() {
         this.habits = JSON.parse(localStorage.getItem('habits')) || [];
@@ -28,7 +26,6 @@ class HabitTracker {
             });
         });
 
-        // Modal controls
         const modal = document.getElementById('habitModal');
         const addHabitBtn = document.getElementById('addHabitBtn');
         const addNewHabitBtn = document.getElementById('addNewHabitBtn');
@@ -47,7 +44,7 @@ class HabitTracker {
             }
         });
 
-        // Form submission
+
         const habitForm = document.getElementById('habitForm');
         habitForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -81,7 +78,7 @@ class HabitTracker {
             importFile.addEventListener('change', (e) => this.importData(e));
         }
 
-        // Calendar navigation
+
         const prevMonth = document.getElementById('prevMonth');
         const nextMonth = document.getElementById('nextMonth');
 
@@ -93,7 +90,6 @@ class HabitTracker {
             nextMonth.addEventListener('click', () => this.navigateMonth(1));
         }
 
-        // Close modal when clicking outside
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 this.closeHabitModal();
@@ -102,22 +98,18 @@ class HabitTracker {
     }
 
     switchTab(tabName) {
-        // Update active tab
         this.activeTab = tabName;
 
-        // Update tab buttons
         document.querySelectorAll('.nav-tab').forEach(tab => {
             tab.classList.remove('active');
         });
         document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
 
-        // Update tab content
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.remove('active');
         });
         document.getElementById(tabName).classList.add('active');
 
-        // Load tab-specific content
         this.loadActiveTab();
     }
 
@@ -155,10 +147,8 @@ class HabitTracker {
         const percentage = todayHabits.length > 0 ? 
             Math.round((completedCount / todayHabits.length) * 100) : 0;
 
-        // Update progress chart
         this.createTodayProgressChart(percentage);
 
-        // Update percentage display
         const percentageElement = document.getElementById('todayPercentage');
         if (percentageElement) {
             percentageElement.textContent = `${percentage}%`;
@@ -324,7 +314,6 @@ class HabitTracker {
         this.updateAnalyticsStats();
     }
 
-    // Chart Creation Methods
     createTodayProgressChart(percentage) {
         const canvas = document.getElementById('todayProgressChart');
         if (!canvas) return;
@@ -537,7 +526,6 @@ class HabitTracker {
         });
     }
 
-    // Calendar Methods
     setupCalendar() {
         this.updateCalendar();
     }
@@ -556,10 +544,8 @@ class HabitTracker {
             year: 'numeric'
         }).format(this.currentDate);
 
-        // Clear existing calendar
         container.innerHTML = '';
 
-        // Add day headers
         const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         dayHeaders.forEach(day => {
             const dayElement = document.createElement('div');
@@ -568,13 +554,11 @@ class HabitTracker {
             container.appendChild(dayElement);
         });
 
-        // Get first day of month and number of days
         const firstDay = new Date(year, month, 1);
         const lastDay = new Date(year, month + 1, 0);
         const startDate = new Date(firstDay);
         startDate.setDate(startDate.getDate() - firstDay.getDay());
 
-        // Generate calendar days
         for (let i = 0; i < 42; i++) {
             const currentDate = new Date(startDate);
             currentDate.setDate(startDate.getDate() + i);
@@ -582,12 +566,10 @@ class HabitTracker {
             const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day';
             
-            // Check if it's current month
             if (currentDate.getMonth() !== month) {
                 dayElement.classList.add('other-month');
             }
             
-            // Check if it's today
             const today = new Date();
             if (this.isSameDay(currentDate, today)) {
                 dayElement.classList.add('today');
@@ -623,7 +605,6 @@ class HabitTracker {
         this.updateCalendar();
     }
 
-    // Modal Methods
     openHabitModal(habitId = null) {
         const modal = document.getElementById('habitModal');
         const form = document.getElementById('habitForm');
@@ -680,7 +661,6 @@ class HabitTracker {
             createdAt: editId ? this.habits.find(h => h.id === editId).createdAt : new Date().toISOString()
         };
 
-        // Handle custom days
         if (habitData.frequency === 'custom') {
             const selectedDays = Array.from(document.querySelectorAll('#customDaysGroup input:checked'))
                 .map(input => parseInt(input.value));
@@ -709,7 +689,6 @@ class HabitTracker {
         if (confirm('Are you sure you want to delete this habit? This action cannot be undone.')) {
             this.habits = this.habits.filter(h => h.id !== habitId);
             
-            // Clean up completions
             Object.keys(this.completions).forEach(date => {
                 delete this.completions[date][habitId];
             });
@@ -720,8 +699,6 @@ class HabitTracker {
             this.showToast('Habit deleted successfully!');
         }
     }
-
-    // Habit Completion Methods
     toggleHabitCompletion(habitId) {
         const today = this.formatDate(new Date());
         
@@ -758,7 +735,6 @@ class HabitTracker {
         this.showToast('All habits marked as completed!');
     }
 
-    // Data Analysis Methods
     getTodayHabits() {
         const today = new Date();
         return this.getHabitsForDate(today);
@@ -846,7 +822,6 @@ class HabitTracker {
         const activities = [];
         const today = new Date();
         
-        // Get last 7 days of activities
         for (let i = 0; i < 7; i++) {
             const checkDate = new Date(today);
             checkDate.setDate(today.getDate() - i);
@@ -868,7 +843,7 @@ class HabitTracker {
             }
         }
         
-        return activities.slice(0, 10); // Limit to 10 most recent
+        return activities.slice(0, 10); 
     }
 
    getWeeklyData() {
@@ -876,8 +851,6 @@ class HabitTracker {
     const today = new Date();
     const day = today.getDay();
     
-    // Jika hari ini Minggu (0), kita kurangi 6 hari untuk ke Senin lalu.
-    // Jika bukan Minggu, kita kurangi (day - 1).
     const diff = today.getDate() - (day === 0 ? 6 : day - 1);
     const monday = new Date(today.setDate(diff));
     monday.setHours(0, 0, 0, 0);
@@ -902,7 +875,6 @@ class HabitTracker {
         const data = [];
         const today = new Date();
         
-        // Get last 30 days
         for (let i = 29; i >= 0; i--) {
             const checkDate = new Date(today);
             checkDate.setDate(today.getDate() - i);
@@ -991,8 +963,6 @@ class HabitTracker {
         const dates = Object.keys(this.completions);
         return dates.length;
     }
-
-    // Export functionality
     exportData() {
         const exportData = {
             habits: this.habits,
@@ -1026,31 +996,26 @@ class HabitTracker {
             try {
                 const importedData = JSON.parse(e.target.result);
                 
-                // Validate the imported data structure
                 if (!importedData.habits || !importedData.completions) {
                     this.showToast('Invalid file format! Please select a valid habit tracker backup.', true);
                     return;
                 }
 
-                // Confirm before overwriting existing data
                 const hasExistingData = this.habits.length > 0;
                 const message = hasExistingData 
                     ? 'This will replace all your current habits and progress. Are you sure?' 
                     : 'Import habit data from backup file?';
 
                 if (confirm(message)) {
-                    // Import the data
                     this.habits = importedData.habits;
                     this.completions = importedData.completions;
                     
-                    // Save to localStorage
                     this.saveToStorage();
                     
-                    // Refresh the UI
                     this.loadActiveTab();
                     this.updateHeaderStats();
                     
-                    // Clear the file input
+                    
                     event.target.value = '';
                     
                     this.showToast(`Successfully imported ${this.habits.length} habits and their progress!`);
@@ -1064,7 +1029,6 @@ class HabitTracker {
         reader.readAsText(file);
     }
 
-    // Utility Methods
     formatDate(date) {
         return date.toISOString().split('T')[0];
     }
@@ -1142,12 +1106,10 @@ class HabitTracker {
     }
 }
 
-// Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.habitTracker = new HabitTracker();
 });
 
-// Add some sample data for demo purposes (remove this in production)
 if (!localStorage.getItem('habits')) {
     const sampleHabits = [
         {
@@ -1176,14 +1138,13 @@ if (!localStorage.getItem('habits')) {
             description: 'Physical workout or activity',
             category: 'health',
             frequency: 'custom',
-            customDays: [1, 3, 5], // Monday, Wednesday, Friday
+            customDays: [1, 3, 5], 
             target: 45,
             unit: 'minutes',
             createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
         }
     ];
     
-    // Add some sample completion data
     const sampleCompletions = {};
     const today = new Date();
     
@@ -1207,10 +1168,8 @@ renderWeeklyChart() {
     const ctx = document.getElementById('weeklyChart');
     if (!ctx) return;
 
-    // Ambil data dari logic yang sudah kamu buat tadi
     const streakData = this.getStreakData(); 
 
-    // Hapus instance lama jika ada (mencegah tumpang tindih)
     if (this.weeklyChartInstance) {
         this.weeklyChartInstance.destroy();
     }
@@ -1221,7 +1180,7 @@ renderWeeklyChart() {
             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
             datasets: [{
                 label: 'Habit Streaks',
-                data: streakData.data, // Data dari fungsi getStreakData() kamu
+                data: streakData.data, 
                 backgroundColor: '#4ecdc4',
                 borderRadius: 5
             }]
@@ -1235,6 +1194,7 @@ renderWeeklyChart() {
         }
     });
 }
+
 
 
 
