@@ -1,256 +1,1165 @@
-<!DOCTYPE html>
-<html lang="en">
+class HabitTracker {
+    constructor() {
+        this.habits = JSON.parse(localStorage.getItem('habits')) || [];
+        this.completions = JSON.parse(localStorage.getItem('completions')) || {};
+        this.currentDate = new Date();
+        this.activeTab = 'dashboard';
+        this.charts = {};
+        
+        this.init();
+    }
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Habitify task</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    init() {
+        this.setupEventListeners();
+        this.loadActiveTab();
+        this.updateDashboard();
+        this.loadHabitsList();
+        this.updateHeaderStats();
+        this.setupCalendar();
+    }
 
-</head>
+    setupEventListeners() {
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const tabName = e.target.dataset.tab;
+                this.switchTab(tabName);
+            });
+        });
 
-<body>
-    <div class="container">
-        <header class="header">
-            <div class="header-content">
-                <h1>
-                    <img src="logo.png" alt="Logo Habitify" class="header-logo">
-                    Habitify task
-                </h1>
-                <p class="subtitle">Build better your habits</p>
-            </div>
-            <div class="header-stats">
-                <div class="stat-card">
+        const modal = document.getElementById('habitModal');
+        const addHabitBtn = document.getElementById('addHabitBtn');
+        const addNewHabitBtn = document.getElementById('addNewHabitBtn');
+        const closeModal = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
+
+        [addHabitBtn, addNewHabitBtn].forEach(btn => {
+            if (btn) {
+                btn.addEventListener('click', () => this.openHabitModal());
+            }
+        });
+
+        [closeModal, cancelBtn].forEach(btn => {
+            if (btn) {
+                btn.addEventListener('click', () => this.closeHabitModal());
+            }
+        });
+
+        const habitForm = document.getElementById('habitForm');
+        habitForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveHabit();
+        });
+
+        const frequencySelect = document.getElementById('habitFrequency');
+        frequencySelect.addEventListener('change', (e) => {
+            const customDaysGroup = document.getElementById('customDaysGroup');
+            customDaysGroup.style.display = e.target.value === 'custom' ? 'block' : 'none';
+        });
+
+        const markAllBtn = document.getElementById('markAllBtn');
+        const exportBtn = document.getElementById('exportBtn');
+
+        if (markAllBtn) {
+            markAllBtn.addEventListener('click', () => this.markAllComplete());
+        }
+
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => this.exportData());
+        }
+
+        const importBtn = document.getElementById('importBtn');
+        const importFile = document.getElementById('importFile');
+
+        if (importBtn) {
+            importBtn.addEventListener('click', () => importFile.click());
+        }
+
+        if (importFile) {
+            importFile.addEventListener('change', (e) => this.importData(e));
+        }
+
+        const prevMonth = document.getElementById('prevMonth');
+        const nextMonth = document.getElementById('nextMonth');
+
+        if (prevMonth) {
+            prevMonth.addEventListener('click', () => this.navigateMonth(-1));
+        }
+
+        if (nextMonth) {
+            nextMonth.addEventListener('click', () => this.navigateMonth(1));
+        }
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.closeHabitModal();
+            }
+        });
+    }
+
+    switchTab(tabName) {
+        this.activeTab = tabName;
+
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(tabName).classList.add('active');
+
+        this.loadActiveTab();
+    }
+
+    loadActiveTab() {
+        switch (this.activeTab) {
+            case 'dashboard':
+                this.updateDashboard();
+                break;
+            case 'habits':
+                this.loadHabitsList();
+                break;
+            case 'analytics':
+                this.loadAnalytics();
+                break;
+            case 'calendar':
+                this.updateCalendar();
+                break;
+        }
+    }
+
+    updateDashboard() {
+        this.updateTodayProgress();
+        this.updateTodayHabits();
+        this.updateRecentActivity();
+        this.createWeeklyChart();
+    }
+
+    updateTodayProgress() {
+        const today = this.formatDate(new Date());
+        const todayHabits = this.getTodayHabits();
+        const completedCount = todayHabits.filter(habit => 
+            this.isHabitCompletedToday(habit.id)
+        ).length;
+        
+        const percentage = todayHabits.length > 0 ? 
+            Math.round((completedCount / todayHabits.length) * 100) : 0;
+
+        this.createTodayProgressChart(percentage);
+
+        const percentageElement = document.getElementById('todayPercentage');
+        if (percentageElement) {
+            percentageElement.textContent = `${percentage}%`;
+        }
+    }
+
+    updateTodayHabits() {
+        const todayHabits = this.getTodayHabits();
+        const container = document.getElementById('todayHabitsGrid');
+        
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        if (todayHabits.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-plus-circle"></i>
+                    <h3>No habits for today</h3>
+                    <p>Add some habits to start tracking your progress!</p>
+                    <button class="btn-primary" onclick="habitTracker.openHabitModal()">
+                        <i class="fas fa-plus"></i> Add Your First Habit
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        todayHabits.forEach(habit => {
+            const isCompleted = this.isHabitCompletedToday(habit.id);
+            const streak = this.getHabitStreak(habit.id);
+            
+            const habitCard = document.createElement('div');
+            habitCard.className = `habit-card ${isCompleted ? 'completed' : 'incomplete'}`;
+            habitCard.dataset.category = habit.category;
+            
+            habitCard.innerHTML = `
+                <div class="habit-header">
+                    <div>
+                        <div class="habit-title">${habit.name}</div>
+                        <div class="habit-category">${this.getCategoryIcon(habit.category)} ${this.getCategoryName(habit.category)}</div>
+                    </div>
+                    <div class="habit-status ${isCompleted ? 'completed' : ''}" onclick="habitTracker.toggleHabitCompletion('${habit.id}')">
+                        ${isCompleted ? '<i class="fas fa-check"></i>' : ''}
+                    </div>
+                </div>
+                <div class="habit-progress">
+                    <div class="habit-progress-bar" style="width: ${isCompleted ? 100 : 0}%"></div>
+                </div>
+                <div class="habit-streak">
                     <i class="fas fa-fire"></i>
-                    <div>
-                        <span class="stat-number" id="totalStreak">0</span>
-                        <span class="stat-label">Day Streak</span>
+                    <span>${streak} day${streak !== 1 ? 's' : ''} streak</span>
+                </div>
+            `;
+            
+            container.appendChild(habitCard);
+        });
+    }
+
+    updateRecentActivity() {
+        const container = document.getElementById('activityList');
+        if (!container) return;
+
+        const activities = this.getRecentActivities();
+        
+        container.innerHTML = '';
+
+        if (activities.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #666;">No recent activity</p>';
+            return;
+        }
+
+        activities.forEach(activity => {
+            const activityItem = document.createElement('div');
+            activityItem.className = 'activity-item';
+            
+            activityItem.innerHTML = `
+                <div class="activity-icon ${activity.type}">
+                    <i class="fas ${activity.type === 'completed' ? 'fa-check' : 'fa-times'}"></i>
+                </div>
+                <div class="activity-text">
+                    <h4>${activity.habitName}</h4>
+                    <p>${activity.date} • ${activity.time}</p>
+                </div>
+            `;
+            
+            container.appendChild(activityItem);
+        });
+    }
+
+    updateHeaderStats() {
+        const totalStreakElement = document.getElementById('totalStreak');
+        const completedTodayElement = document.getElementById('completedToday');
+        
+        if (totalStreakElement) {
+            const longestStreak = this.getLongestCurrentStreak();
+            totalStreakElement.textContent = longestStreak;
+        }
+        
+        if (completedTodayElement) {
+            const todayHabits = this.getTodayHabits();
+            const completedCount = todayHabits.filter(habit => 
+                this.isHabitCompletedToday(habit.id)
+            ).length;
+            completedTodayElement.textContent = completedCount;
+        }
+    }
+
+    loadHabitsList() {
+        const container = document.getElementById('habitsList');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        if (this.habits.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-list-check"></i>
+                    <h3>No habits yet</h3>
+                    <p>Start building better habits by adding your first one!</p>
+                </div>
+            `;
+            return;
+        }
+
+        this.habits.forEach(habit => {
+            const streak = this.getHabitStreak(habit.id);
+            const completionRate = this.getHabitCompletionRate(habit.id);
+            
+            const habitItem = document.createElement('div');
+            habitItem.className = 'habit-item';
+            habitItem.style.borderLeftColor = this.getCategoryColor(habit.category);
+            
+            habitItem.innerHTML = `
+                <div class="habit-info">
+                    <h4>${habit.name}</h4>
+                    <p>${habit.description || 'No description provided'}</p>
+                    <div class="habit-meta">
+                        <span><i class="fas fa-calendar"></i> ${habit.frequency}</span>
+                        <span><i class="fas fa-fire"></i> ${streak} day streak</span>
+                        <span><i class="fas fa-percentage"></i> ${completionRate}% completion</span>
+                        <span><i class="fas fa-tag"></i> ${this.getCategoryName(habit.category)}</span>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <i class="fas fa-trophy"></i>
-                    <div>
-                        <span class="stat-number" id="completedToday">0</span>
-                        <span class="stat-label">Completed Today</span>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <nav class="nav-tabs">
-            <button class="nav-tab active" data-tab="dashboard">
-                <i class="fas fa-tachometer-alt"></i> Dashboard
-            </button>
-            <button class="nav-tab" data-tab="habits">
-                <i class="fas fa-list-check"></i> My Habits
-            </button>
-            <button class="nav-tab" data-tab="analytics">
-                <i class="fas fa-chart-bar"></i> Analytics
-            </button>
-            <button class="nav-tab" data-tab="calendar">
-                <i class="fas fa-calendar"></i> Calendar
-            </button>
-        </nav>
-
-        <div class="tab-content active" id="dashboard">
-            <div class="dashboard-grid">
-                <div class="dashboard-card progress-overview">
-                    <h3><i class="fas fa-chart-pie"></i> Today's Progress</h3>
-                    <div class="progress-circle">
-                        <canvas id="todayProgressChart"></canvas>
-                        <div class="progress-text">
-                            <span class="progress-percentage" id="todayPercentage">0%</span>
-                            <span class="progress-label">Complete</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="dashboard-card quick-actions">
-                    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
-                    <button class="action-btn primary" id="addHabitBtn">
-                        <i class="fas fa-plus"></i> Add New Habit
+                <div class="habit-actions">
+                    <button class="btn-small btn-edit" onclick="habitTracker.editHabit('${habit.id}')">
+                        <i class="fas fa-edit"></i> Edit
                     </button>
-                    <button class="action-btn secondary" id="markAllBtn">
-                        <i class="fas fa-check-double"></i> Mark All Complete
+                    <button class="btn-small btn-delete" onclick="habitTracker.deleteHabit('${habit.id}')">
+                        <i class="fas fa-trash"></i> Delete
                     </button>
-                    <button class="action-btn tertiary" id="exportBtn">
-                        <i class="fas fa-download"></i> Export Data
-                    </button>
-                    <button class="action-btn quaternary" id="importBtn">
-                        <i class="fas fa-upload"></i> Import Data
-                    </button>
-                    <input type="file" id="importFile" accept=".json" style="display: none;">
                 </div>
+            `;
+            
+            container.appendChild(habitItem);
+        });
+    }
 
-                <div class="dashboard-card recent-activity">
-                    <h3><i class="fas fa-history"></i> Recent Activity</h3>
-                    <div class="activity-list" id="activityList">
-                    </div>
+    loadAnalytics() {
+        this.createMonthlyChart();
+        this.createHabitDistributionChart();
+        this.createStreakChart();
+        this.updateAnalyticsStats();
+    }
+
+    createTodayProgressChart(percentage) {
+        const canvas = document.getElementById('todayProgressChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        
+        if (this.charts.todayProgress) {
+            this.charts.todayProgress.destroy();
+        }
+
+        this.charts.todayProgress = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [percentage, 100 - percentage],
+                    backgroundColor: [
+                        'rgba(102, 126, 234, 1)',
+                        'rgba(240, 240, 240, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '75%',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        enabled: false
+                    }
+                }
+            }
+        });
+    }
+
+    createWeeklyChart() {
+        const canvas = document.getElementById('weeklyChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        
+        if (this.charts.weekly) {
+            this.charts.weekly.destroy();
+        }
+
+        const weekData = this.getWeeklyData();
+
+        this.charts.weekly = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Completed Habits',
+                    data: weekData,
+                    backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    createMonthlyChart() {
+        const canvas = document.getElementById('monthlyChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        
+        if (this.charts.monthly) {
+            this.charts.monthly.destroy();
+        }
+
+        const monthlyData = this.getMonthlyData();
+
+        this.charts.monthly = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: monthlyData.labels,
+                datasets: [{
+                    label: 'Daily Completion %',
+                    data: monthlyData.data,
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    createHabitDistributionChart() {
+        const canvas = document.getElementById('habitDistributionChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        
+        if (this.charts.distribution) {
+            this.charts.distribution.destroy();
+        }
+
+        const distributionData = this.getHabitDistributionData();
+
+        this.charts.distribution = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: distributionData.labels,
+                datasets: [{
+                    data: distributionData.data,
+                    backgroundColor: [
+                        '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4',
+                        '#feca57', '#ff9ff3', '#54a0ff'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    createStreakChart() {
+        const canvas = document.getElementById('streakChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        
+        if (this.charts.streak) {
+            this.charts.streak.destroy();
+        }
+
+        const streakData = this.getStreakData();
+
+        this.charts.streak = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: streakData.labels,
+                datasets: [{
+                    label: 'Current Streak (days)',
+                    data: streakData.data,
+                    backgroundColor: 'rgba(17, 153, 142, 0.8)',
+                    borderColor: 'rgba(17, 153, 142, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    setupCalendar() {
+        this.updateCalendar();
+    }
+
+    updateCalendar() {
+        const container = document.getElementById('calendarGrid');
+        const monthHeader = document.getElementById('currentMonth');
+        
+        if (!container || !monthHeader) return;
+
+        const year = this.currentDate.getFullYear();
+        const month = this.currentDate.getMonth();
+        
+        monthHeader.textContent = new Intl.DateTimeFormat('en-US', {
+            month: 'long',
+            year: 'numeric'
+        }).format(this.currentDate);
+
+        container.innerHTML = '';
+
+        const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        dayHeaders.forEach(day => {
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day header';
+            dayElement.textContent = day;
+            container.appendChild(dayElement);
+        });
+
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const startDate = new Date(firstDay);
+        startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+        for (let i = 0; i < 42; i++) {
+            const currentDate = new Date(startDate);
+            currentDate.setDate(startDate.getDate() + i);
+            
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            
+            if (currentDate.getMonth() !== month) {
+                dayElement.classList.add('other-month');
+            }
+            
+            const today = new Date();
+            if (this.isSameDay(currentDate, today)) {
+                dayElement.classList.add('today');
+            }
+            
+            const dateStr = this.formatDate(currentDate);
+            const dayHabits = this.getHabitsForDate(currentDate);
+            const completedHabits = dayHabits.filter(habit => 
+                this.completions[dateStr] && this.completions[dateStr][habit.id]
+            ).length;
+            
+            const completionPercentage = dayHabits.length > 0 ? 
+                (completedHabits / dayHabits.length) * 100 : 0;
+            
+            dayElement.innerHTML = `
+                <div class="calendar-day-number">${currentDate.getDate()}</div>
+                <div class="calendar-progress">
+                    <div class="calendar-progress-bar" style="width: ${completionPercentage}%"></div>
                 </div>
+            `;
+            
+            if (completionPercentage > 0) {
+                dayElement.classList.add('has-progress');
+            }
+            
+            container.appendChild(dayElement);
+        }
+    }
 
-                <div class="dashboard-card weekly-overview">
-                    <h3><i class="fas fa-calendar-week"></i> This Week</h3>
-                    <canvas id="weeklyChart"></canvas>
-                </div>
-            </div>
+    navigateMonth(direction) {
+        this.currentDate.setMonth(this.currentDate.getMonth() + direction);
+        this.updateCalendar();
+    }
+
+    openHabitModal(habitId = null) {
+        const modal = document.getElementById('habitModal');
+        const form = document.getElementById('habitForm');
+        const modalTitle = document.getElementById('modalTitle');
+        
+        form.reset();
+        
+        if (habitId) {
+            const habit = this.habits.find(h => h.id === habitId);
+            if (habit) {
+                modalTitle.textContent = 'Edit Habit';
+                document.getElementById('habitName').value = habit.name;
+                document.getElementById('habitDescription').value = habit.description || '';
+                document.getElementById('habitCategory').value = habit.category;
+                document.getElementById('habitFrequency').value = habit.frequency;
+                document.getElementById('habitTarget').value = habit.target || '';
+                document.getElementById('habitUnit').value = habit.unit || '';
+                
+                if (habit.frequency === 'custom' && habit.customDays) {
+                    document.getElementById('customDaysGroup').style.display = 'block';
+                    habit.customDays.forEach(day => {
+                        const checkbox = document.querySelector(`input[value="${day}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    });
+                }
+                
+                form.dataset.editId = habitId;
+            }
+        } else {
+            modalTitle.textContent = 'Add New Habit';
+            delete form.dataset.editId;
+        }
+        
+        modal.classList.add('show');
+    }
+
+    closeHabitModal() {
+        const modal = document.getElementById('habitModal');
+        modal.classList.remove('show');
+    }
+
+    saveHabit() {
+        const form = document.getElementById('habitForm');
+        const editId = form.dataset.editId;
+        
+        const habitData = {
+            id: editId || this.generateId(),
+            name: document.getElementById('habitName').value,
+            description: document.getElementById('habitDescription').value,
+            category: document.getElementById('habitCategory').value,
+            frequency: document.getElementById('habitFrequency').value,
+            target: document.getElementById('habitTarget').value || null,
+            unit: document.getElementById('habitUnit').value || null,
+            createdAt: editId ? this.habits.find(h => h.id === editId).createdAt : new Date().toISOString()
+        };
+
+        if (habitData.frequency === 'custom') {
+            const selectedDays = Array.from(document.querySelectorAll('#customDaysGroup input:checked'))
+                .map(input => parseInt(input.value));
+            habitData.customDays = selectedDays;
+        }
+
+        if (editId) {
+            const index = this.habits.findIndex(h => h.id === editId);
+            this.habits[index] = habitData;
+        } else {
+            this.habits.push(habitData);
+        }
+
+        this.saveToStorage();
+        this.closeHabitModal();
+        this.loadActiveTab();
+        this.updateHeaderStats();
+        this.showToast(editId ? 'Habit updated successfully!' : 'Habit added successfully!');
+    }
+
+    editHabit(habitId) {
+        this.openHabitModal(habitId);
+    }
+
+    deleteHabit(habitId) {
+        if (confirm('Are you sure you want to delete this habit? This action cannot be undone.')) {
+            this.habits = this.habits.filter(h => h.id !== habitId);
+            
+            Object.keys(this.completions).forEach(date => {
+                delete this.completions[date][habitId];
+            });
+            
+            this.saveToStorage();
+            this.loadActiveTab();
+            this.updateHeaderStats();
+            this.showToast('Habit deleted successfully!');
+        }
+    }
+
+    toggleHabitCompletion(habitId) {
+        const today = this.formatDate(new Date());
+        
+        if (!this.completions[today]) {
+            this.completions[today] = {};
+        }
+        
+        this.completions[today][habitId] = !this.completions[today][habitId];
+        
+        this.saveToStorage();
+        this.updateDashboard();
+        this.updateHeaderStats();
+        
+        const isCompleted = this.completions[today][habitId];
+        const habit = this.habits.find(h => h.id === habitId);
+        this.showToast(`${habit.name} marked as ${isCompleted ? 'completed' : 'incomplete'}!`);
+    }
+
+    markAllComplete() {
+        const today = this.formatDate(new Date());
+        const todayHabits = this.getTodayHabits();
+        
+        if (!this.completions[today]) {
+            this.completions[today] = {};
+        }
+        
+        todayHabits.forEach(habit => {
+            this.completions[today][habit.id] = true;
+        });
+        
+        this.saveToStorage();
+        this.updateDashboard();
+        this.updateHeaderStats();
+        this.showToast('All habits marked as completed!');
+    }
+
+    getTodayHabits() {
+        const today = new Date();
+        return this.getHabitsForDate(today);
+    }
+
+    getHabitsForDate(date) {
+        const dayOfWeek = date.getDay();
+        
+        return this.habits.filter(habit => {
+            if (habit.frequency === 'daily') return true;
+            if (habit.frequency === 'weekly') return dayOfWeek === 1; 
+            if (habit.frequency === 'custom') {
+                return habit.customDays && habit.customDays.includes(dayOfWeek);
+            }
+            return false;
+        });
+    }
+
+    isHabitCompletedToday(habitId) {
+        const today = this.formatDate(new Date());
+        return this.completions[today] && this.completions[today][habitId];
+    }
+
+    getHabitStreak(habitId) {
+        let streak = 0;
+        const today = new Date();
+        
+        for (let i = 0; i < 365; i++) {
+            const checkDate = new Date(today);
+            checkDate.setDate(today.getDate() - i);
+            
+            const dateStr = this.formatDate(checkDate);
+            const dayHabits = this.getHabitsForDate(checkDate);
+            const habitShouldBeTracked = dayHabits.some(h => h.id === habitId);
+            
+            if (habitShouldBeTracked) {
+                if (this.completions[dateStr] && this.completions[dateStr][habitId]) {
+                    streak++;
+                } else {
+                    break;
+                }
+            }
+        }
+        
+        return streak;
+    }
+
+    getHabitCompletionRate(habitId) {
+        const habit = this.habits.find(h => h.id === habitId);
+        if (!habit) return 0;
+        
+        const createdDate = new Date(habit.createdAt);
+        const today = new Date();
+        let totalDays = 0;
+        let completedDays = 0;
+        
+        for (let date = new Date(createdDate); date <= today; date.setDate(date.getDate() + 1)) {
+            const dayHabits = this.getHabitsForDate(date);
+            const shouldTrack = dayHabits.some(h => h.id === habitId);
+            
+            if (shouldTrack) {
+                totalDays++;
+                const dateStr = this.formatDate(date);
+                if (this.completions[dateStr] && this.completions[dateStr][habitId]) {
+                    completedDays++;
+                }
+            }
+        }
+        
+        return totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
+    }
+
+    getLongestCurrentStreak() {
+        let longestStreak = 0;
+        
+        this.habits.forEach(habit => {
+            const streak = this.getHabitStreak(habit.id);
+            longestStreak = Math.max(longestStreak, streak);
+        });
+        
+        return longestStreak;
+    }
+
+    getRecentActivities() {
+        const activities = [];
+        const today = new Date();
+        
+        for (let i = 0; i < 7; i++) {
+            const checkDate = new Date(today);
+            checkDate.setDate(today.getDate() - i);
+            const dateStr = this.formatDate(checkDate);
+            
+            if (this.completions[dateStr]) {
+                const dayHabits = this.getHabitsForDate(checkDate);
+                
+                dayHabits.forEach(habit => {
+                    const isCompleted = this.completions[dateStr][habit.id];
+                    
+                    activities.push({
+                        habitName: habit.name,
+                        type: isCompleted ? 'completed' : 'missed',
+                        date: this.formatDateForDisplay(checkDate),
+                        time: checkDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                    });
+                });
+            }
+        }
+        
+        return activities.slice(0, 10); 
+    }
+
+    getWeeklyData() {
+        const data = [];
+        const today = new Date();
+        
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - today.getDay() + 1);
+        
+        for (let i = 0; i < 7; i++) {
+            const checkDate = new Date(monday);
+            checkDate.setDate(monday.getDate() + i);
+            const dateStr = this.formatDate(checkDate);
+            
+            const dayHabits = this.getHabitsForDate(checkDate);
+            const completedCount = dayHabits.filter(habit => 
+                this.completions[dateStr] && this.completions[dateStr][habit.id]
+            ).length;
+            
+            data.push(completedCount);
+        }
+        
+        return data;
+    }
+
+    getMonthlyData() {
+        const labels = [];
+        const data = [];
+        const today = new Date();
+        
+        for (let i = 29; i >= 0; i--) {
+            const checkDate = new Date(today);
+            checkDate.setDate(today.getDate() - i);
+            
+            labels.push(checkDate.getDate().toString());
+            
+            const dateStr = this.formatDate(checkDate);
+            const dayHabits = this.getHabitsForDate(checkDate);
+            const completedCount = dayHabits.filter(habit => 
+                this.completions[dateStr] && this.completions[dateStr][habit.id]
+            ).length;
+            
+            const percentage = dayHabits.length > 0 ? 
+                Math.round((completedCount / dayHabits.length) * 100) : 0;
+            
+            data.push(percentage);
+        }
+        
+        return { labels, data };
+    }
+
+    getHabitDistributionData() {
+        const categories = {};
+        
+        this.habits.forEach(habit => {
+            categories[habit.category] = (categories[habit.category] || 0) + 1;
+        });
+        
+        return {
+            labels: Object.keys(categories).map(cat => this.getCategoryName(cat)),
+            data: Object.values(categories)
+        };
+    }
+
+    getStreakData() {
+        const labels = [];
+        const data = [];
+        
+        this.habits.forEach(habit => {
+            labels.push(habit.name.length > 15 ? habit.name.substring(0, 15) + '...' : habit.name);
+            data.push(this.getHabitStreak(habit.id));
+        });
+        
+        return { labels, data };
+    }
+
+    updateAnalyticsStats() {
+        const longestStreakElement = document.getElementById('longestStreak');
+        const overallCompletionElement = document.getElementById('overallCompletion');
+        const totalDaysElement = document.getElementById('totalDays');
+        
+            if (longestStreakElement) {
+        longestStreakElement.textContent = this.getLongestCurrentStreak();
+    }
+
+    if (overallCompletionElement) {
+        let totalHabits = 0;
+        let completed = 0;
+
+        Object.keys(this.completions).forEach(date => {
+            const habits = this.completions[date];
+            Object.values(habits).forEach(val => {
+                totalHabits++;
+                if (val) completed++;
+            });
+        });
+
+        const percent = totalHabits > 0 ? Math.round((completed / totalHabits) * 100) : 0;
+        overallCompletionElement.textContent = percent + "%";
+    }
+
+    if (totalDaysElement) {
+        totalDaysElement.textContent = Object.keys(this.completions).length;
+    }
+}
+
+    getOverallCompletionRate() {
+        if (this.habits.length === 0) return 0;
+        
+        const rates = this.habits.map(habit => this.getHabitCompletionRate(habit.id));
+        const average = rates.reduce((sum, rate) => sum + rate, 0) / rates.length;
+        return Math.round(average);
+    }
+
+    getTotalTrackingDays() {
+        const dates = Object.keys(this.completions);
+        return dates.length;
+    }
+
+    exportData() {
+        const exportData = {
+            habits: this.habits,
+            completions: this.completions,
+            exportDate: new Date().toISOString()
+        };
+        
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `habit-tracker-data-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        
+        this.showToast('Data exported successfully!');
+    }
+
+    importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!file.name.endsWith('.json')) {
+            this.showToast('Please select a valid JSON file!', true);
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                
+                if (!importedData.habits || !importedData.completions) {
+                    this.showToast('Invalid file format! Please select a valid habit tracker backup.', true);
+                    return;
+                }
+
+                const hasExistingData = this.habits.length > 0;
+                const message = hasExistingData 
+                    ? 'This will replace all your current habits and progress. Are you sure?' 
+                    : 'Import habit data from backup file?';
+
+                if (confirm(message)) {
+                    this.habits = importedData.habits;
+                    this.completions = importedData.completions;
+                    
+                    this.saveToStorage();
+                    
+                    this.loadActiveTab();
+                    this.updateHeaderStats();
+                    
+                    event.target.value = '';
+                    
+                    this.showToast(`Successfully imported ${this.habits.length} habits and their progress!`);
+                }
+            } catch (error) {
+                console.error('Import error:', error);
+                this.showToast('Error reading file! Please check the file format.', true);
+            }
+        };
+        
+        reader.readAsText(file);
+    }
+
+    formatDate(date) {
+        return date.toISOString().split('T')[0];
+    }
+
+    formatDateForDisplay(date) {
+        return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric' 
+        });
+    }
+
+    isSameDay(date1, date2) {
+        return this.formatDate(date1) === this.formatDate(date2);
+    }
+
+    generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    getCategoryIcon(category) {
+        const icons = {
+            health: '🏃',
+            productivity: '📈',
+            learning: '📚',
+            mindfulness: '🧘',
+            social: '👥',
+            creativity: '🎨',
+            other: '📝'
+        };
+        return icons[category] || '📝';
+    }
+
+    getCategoryName(category) {
+        const names = {
+            health: 'Health & Fitness',
+            productivity: 'Productivity',
+            learning: 'Learning',
+            mindfulness: 'Mindfulness',
+            social: 'Social',
+            creativity: 'Creativity',
+            other: 'Other'
+        };
+        return names[category] || 'Other';
+    }
+
+    getCategoryColor(category) {
+        const colors = {
+            health: '#ff6b6b',
+            productivity: '#4ecdc4',
+            learning: '#45b7d1',
+            mindfulness: '#96ceb4',
+            social: '#feca57',
+            creativity: '#ff9ff3',
+            other: '#54a0ff'
+        };
+        return colors[category] || '#54a0ff';
+    }
+
+    saveToStorage() {
+        localStorage.setItem('habits', JSON.stringify(this.habits));
+        localStorage.setItem('completions', JSON.stringify(this.completions));
+    }
+
+    showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        
+        toastMessage.textContent = message;
+        toast.className = `toast ${isError ? 'error' : ''}`;
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    window.habitTracker = new HabitTracker();
+});
+
+if (!localStorage.getItem('habits')) {
+    const sampleHabits = [
+        {
+            id: 'sample1',
+            name: 'Drink 8 glasses of water',
+            description: 'Stay hydrated throughout the day',
+            category: 'health',
+            frequency: 'daily',
+            target: 8,
+            unit: 'glasses',
+            createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+            id: 'sample2',
+            name: 'Read for 30 minutes',
+            description: 'Read books to expand knowledge',
+            category: 'learning',
+            frequency: 'daily',
+            target: 30,
+            unit: 'minutes',
+            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+            id: 'sample3',
+            name: 'Exercise',
+            description: 'Physical workout or activity',
+            category: 'health',
+            frequency: 'custom',
+            customDays: [1, 3, 5], 
+            target: 45,
+            unit: 'minutes',
+            createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
+        }
+    ];
+    
+    const sampleCompletions = {};
+    const today = new Date();
+    
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        sampleCompletions[dateStr] = {
+            'sample1': Math.random() > 0.3,
+            'sample2': Math.random() > 0.4,
+            'sample3': [1, 3, 5].includes(date.getDay()) ? Math.random() > 0.2 : false
+        };
+    }
+    
+    localStorage.setItem('habits', JSON.stringify(sampleHabits));
+    localStorage.setItem('completions', JSON.stringify(sampleCompletions));
+}
 
 
-            <div class="today-habits">
-                <h3><i class="fas fa-sun"></i> Today's Habits</h3>
-                <div class="habits-grid" id="todayHabitsGrid">
-                </div>
-            </div>
-        </div>
 
-
-        <div class="tab-content" id="habits">
-            <div class="habits-header">
-                <h2><i class="fas fa-list-check"></i> Manage Your Habits</h2>
-                <button class="btn-primary" id="addNewHabitBtn">
-                    <i class="fas fa-plus"></i> Add New Habit
-                </button>
-            </div>
-
-            <div class="habits-list" id="habitsList">
-            </div>
-        </div>
-
-        <div class="tab-content" id="analytics">
-            <div class="analytics-grid">
-                <div class="chart-card">
-                    <h3><i class="fas fa-chart-bar"></i> Monthly Progress</h3>
-                    <canvas id="monthlyChart"></canvas>
-                </div>
-
-                <div class="chart-card">
-                    <h3><i class="fas fa-chart-pie"></i> Habit Distribution</h3>
-                    <canvas id="habitDistributionChart"></canvas>
-                </div>
-
-                <div class="chart-card">
-                    <h3><i class="fas fa-fire"></i> Streak Analysis</h3>
-                    <canvas id="streakChart"></canvas>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <i class="fas fa-trophy"></i>
-                        <div>
-                            <span class="stat-value" id="longestStreak">0</span>
-                            <span class="stat-title">Longest Streak</span>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <i class="fas fa-percentage"></i>
-                        <div>
-                            <span class="stat-value" id="overallCompletion">0%</span>
-                            <span class="stat-title">Overall Completion</span>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <i class="fas fa-calendar-check"></i>
-                        <div>
-                            <span class="stat-value" id="totalDays">0</span>
-                            <span class="stat-title">Days Tracked</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="tab-content" id="calendar">
-            <div class="calendar-header">
-                <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
-                <h2 id="currentMonth">December 2025</h2>
-                <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
-            </div>
-            <div class="calendar-grid" id="calendarGrid">
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="habitModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalTitle">Add New Habit</h3>
-                <button class="close-btn" id="closeModal">&times;</button>
-            </div>
-            <form id="habitForm">
-                <div class="form-group">
-                    <label for="habitName">Habit Name *</label>
-                    <input type="text" id="habitName" required placeholder="e.g., Drink 8 glasses of water">
-                </div>
-
-                <div class="form-group">
-                    <label for="habitDescription">Description</label>
-                    <textarea id="habitDescription" placeholder="Optional description..."></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="habitCategory">Category</label>
-                    <select id="habitCategory">
-                        <option value="health">🏃 Health & Fitness</option>
-                        <option value="productivity">📈 Productivity</option>
-                        <option value="learning">📚 Learning</option>
-                        <option value="mindfulness">🧘 Mindfulness</option>
-                        <option value="social">👥 Social</option>
-                        <option value="creativity">🎨 Creativity</option>
-                        <option value="other">📝 Other</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="habitFrequency">Frequency</label>
-                    <select id="habitFrequency">
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="custom">Custom Days</option>
-                    </select>
-                </div>
-
-                <div class="form-group" id="customDaysGroup" style="display: none;">
-                    <label>Select Days</label>
-                    <div class="days-selector">
-                        <label><input type="checkbox" value="0"> Sun</label>
-                        <label><input type="checkbox" value="1"> Mon</label>
-                        <label><input type="checkbox" value="2"> Tue</label>
-                        <label><input type="checkbox" value="3"> Wed</label>
-                        <label><input type="checkbox" value="4"> Thu</label>
-                        <label><input type="checkbox" value="5"> Fri</label>
-                        <label><input type="checkbox" value="6"> Sat</label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="habitTarget">Target (optional)</label>
-                    <input type="number" id="habitTarget" min="1" placeholder="e.g., 8 for 8 glasses">
-                </div>
-
-                <div class="form-group">
-                    <label for="habitUnit">Unit (optional)</label>
-                    <input type="text" id="habitUnit" placeholder="e.g., glasses, pages, minutes">
-                </div>
-
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
-                    <button type="submit" class="btn-primary" id="saveHabitBtn">Save Habit</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="toast" id="toast">
-        <div class="toast-content">
-            <i class="fas fa-check-circle"></i>
-            <span id="toastMessage">Success!</span>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
-</body>
-
-</html>
