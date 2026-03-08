@@ -1203,6 +1203,39 @@ if (!localStorage.getItem('habits')) {
     localStorage.setItem('completions', JSON.stringify(sampleCompletions));
 }
 
+renderWeeklyChart() {
+    const ctx = document.getElementById('weeklyChart');
+    if (!ctx) return;
+
+    // Ambil data dari logic yang sudah kamu buat tadi
+    const streakData = this.getStreakData(); 
+
+    // Hapus instance lama jika ada (mencegah tumpang tindih)
+    if (this.weeklyChartInstance) {
+        this.weeklyChartInstance.destroy();
+    }
+
+    this.weeklyChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Habit Streaks',
+                data: streakData.data, // Data dari fungsi getStreakData() kamu
+                backgroundColor: '#4ecdc4',
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, max: 1 }
+            }
+        }
+    });
+}
+
 
 
 
