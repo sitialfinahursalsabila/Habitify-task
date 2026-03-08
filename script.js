@@ -21,7 +21,6 @@ class HabitTracker {
     }
 
     setupEventListeners() {
-        // Tab navigation
         document.querySelectorAll('.nav-tab').forEach(tab => {
             tab.addEventListener('click', (e) => {
                 const tabName = e.target.dataset.tab;
@@ -54,15 +53,12 @@ class HabitTracker {
             e.preventDefault();
             this.saveHabit();
         });
-
-        // Frequency selector
         const frequencySelect = document.getElementById('habitFrequency');
         frequencySelect.addEventListener('change', (e) => {
             const customDaysGroup = document.getElementById('customDaysGroup');
             customDaysGroup.style.display = e.target.value === 'custom' ? 'block' : 'none';
         });
 
-        // Quick actions
         const markAllBtn = document.getElementById('markAllBtn');
         const exportBtn = document.getElementById('exportBtn');
 
@@ -1204,6 +1200,7 @@ if (!localStorage.getItem('habits')) {
     localStorage.setItem('habits', JSON.stringify(sampleHabits));
     localStorage.setItem('completions', JSON.stringify(sampleCompletions));
 }
+
 
 
 
