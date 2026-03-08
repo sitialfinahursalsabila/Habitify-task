@@ -1159,42 +1159,8 @@ if (!localStorage.getItem('habits')) {
     
     localStorage.setItem('habits', JSON.stringify(sampleHabits));
     localStorage.setItem('completions', JSON.stringify(sampleCompletions));
-
-    renderWeeklyChart() {
-    const canvas = document.getElementById('weeklyChart');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const weeklyData = this.getWeeklyData(); // Mengambil data per hari, bukan streak
-
-    if (this.charts.weekly) {
-        this.charts.weekly.destroy();
-    }
-
-    this.charts.weekly = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-                label: 'Habits Completed',
-                data: weeklyData, 
-                backgroundColor: '#4ecdc4',
-                borderRadius: 5
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { 
-                    beginAtZero: true,
-                    ticks: { stepSize: 1 } // Karena habit tidak bisa selesai setengah
-                }
-            }
-        }
-    });
 }
-}
+
 
 
 
