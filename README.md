@@ -243,3 +243,6 @@ Small improvements daily lead to big productivity growth.
 Organize your tasks.
 Build better habits.
 Improve your productivity.
+
+
+*Disclaimer: This project was developed for educational purposes as part of my Informatics Engineering studies. It utilizes an open-source UI base which has been modified and enhanced for better interactivity.*
